@@ -299,6 +299,10 @@
           <h2>Wallet-cli only</h2>
           <p>Routes wallet requests through the official command surface instead of substituting another wallet stack.</p>
         </article>
+        <article class="feature">
+          <h2>Bounded checks</h2>
+          <p>Runs device checks through <code>device-check</code> so the agent gets a result or timeout JSON.</p>
+        </article>
       </section>
 
       <table class="capabilities" aria-label="Wallet CLI Harness capabilities">
@@ -321,7 +325,7 @@
           </tr>
           <tr>
             <th scope="row">Device check</th>
-            <td><code>genuine-check</code></td>
+            <td><code>device-check</code>, wrapping <code>genuine-check --device-timeout 10000</code></td>
           </tr>
         </tbody>
       </table>

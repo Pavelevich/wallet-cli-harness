@@ -31,7 +31,7 @@ flowchart TD
   Q --> R["After approval: live send"]
   B -->|"swap, quote, status"| S["Run wallet-cli swap flow"]
   B -->|"token metadata"| T["assets token or token-by-id"]
-  B -->|"genuine check"| U["wallet_cli_harness.py -- genuine-check"]
+  B -->|"device check, genuine check"| U["wallet_cli_workflow.py device-check"]
   B -->|"reset"| V["wallet_cli_harness.py -- session reset"]
   B -->|"ambiguous"| W["Ask one wallet-cli routing question"]
 ```
@@ -49,7 +49,7 @@ flowchart TD
 | Send/transfer/pay | account label, recipient, amount with ticker | dry-run `send`, summarize, ask approval, then live `send` |
 | Swap/convert/trade | from, to, amount, account, provider as needed | `swap quote`, `swap execute`, or `swap status` |
 | Token metadata | network + address, or token id | `assets token` or `assets token-by-id` |
-| Genuine check | none | `genuine-check` |
+| Device/genuine check | none | `python3 scripts/wallet_cli_workflow.py device-check` |
 | Reset session | none | `session reset` |
 
 ## Reporting Rules
@@ -59,3 +59,4 @@ flowchart TD
 - For balances, list nonzero balances first, then zero labels.
 - For sends, summarize recipient, amount, and fee before asking for approval.
 - For command errors, report the wallet-cli error and ask whether to retry or adjust inputs.
+- For device checks, use the bounded `device-check` workflow. If it times out, report the timeout JSON and stop instead of continuing to wait.

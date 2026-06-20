@@ -53,7 +53,7 @@ First impressions matter. When the user asks what this plugin can do, how it wor
 | Send | Dry-run, summarize, then execute after approval | `send <label> --to <addr> --amount '<n> TICKER'` |
 | Swap | Quote, execute, and check swap status | `swap quote`, `swap execute`, `swap status` |
 | Assets | Resolve token metadata | `assets token`, `assets token-by-id` |
-| Device check | Run the official genuine check | `genuine-check` |
+| Device check | Run a bounded official genuine check | `device-check` |
 
 Ask only for missing inputs needed for the requested action, such as network, account label, recipient, amount, ticker, provider, or swap id.
 
@@ -142,12 +142,14 @@ Follow this tree for every user message while the plugin is active.
 9. **Token metadata**
    If the user provides a token address plus network, run `assets token <network> <address>`. If they provide a token id, run `assets token-by-id <id>`. Ask for the missing network/address/id only if needed.
 
-10. **Genuine check**
+10. **Device check, Ledger check, genuine check, or authenticity**
     Run:
 
     ```bash
-    python3 <plugin-root>/scripts/wallet_cli_harness.py -- genuine-check
+    python3 <plugin-root>/scripts/wallet_cli_workflow.py device-check
     ```
+
+    This workflow is bounded: it passes `--device-timeout 10000` to wallet-cli and also applies a 15 second process timeout. If it times out or returns no final JSON object, report that exact JSON result and stop. Do not keep waiting, start another wallet-cli device command, or switch to a hardware inventory scan.
 
 11. **Reset or start over**
     Run:
@@ -192,6 +194,7 @@ Prefer the workflow script for common informal requests:
 ```bash
 python3 <plugin-root>/scripts/wallet_cli_workflow.py balance-all
 python3 <plugin-root>/scripts/wallet_cli_workflow.py discover --network solana
+python3 <plugin-root>/scripts/wallet_cli_workflow.py device-check
 ```
 
 Use the lower-level harness for direct wallet-cli commands:
@@ -263,7 +266,7 @@ The official CLI does not reliably fail on unknown flags. A typo or invented fla
 | `account discover` | Yes | `--network/-n`, `--output`, `--device-timeout` |
 | `receive` | Yes by default | `--account/-a`, `--verify/-v`, `--no-verify`, `--output`, `--device-timeout` |
 | `send` live | Yes | `--account/-a`, `--to/-t`, `--amount`, `--fee-per-byte`, `--rbf`, `--mode`, `--validator`, `--stake-account`, `--memo`, `--data`, `--dry-run`, `--output`, `--device-timeout` |
-| `genuine-check` | Yes | `--output`, `--device-timeout` |
+| `genuine-check` | Yes | Use `wallet_cli_workflow.py device-check` for bounded execution; raw flags are `--output`, `--device-timeout` |
 | `swap execute` | Yes | `--from/-f`, `--to/-t`, `--provider`, `--amount`, `--account/-a`, `--to-account`, `--fee-strategy`, `--output` |
 
 Notes:
@@ -285,6 +288,6 @@ Notes:
 | "history", "what did I send" | `operations <account>` |
 | "send/transfer/pay X to Y" | dry-run `send`, summarize, ask approval, then live `send` |
 | "swap/convert/trade A to B" | `swap quote`, then `swap execute`, then `swap status` |
-| "is this Ledger genuine" | `genuine-check` |
+| "check my Ledger device", "is this Ledger genuine" | `wallet_cli_workflow.py device-check` |
 | "what is this token" | `assets token <network> <addr>` or `assets token-by-id <id>` |
 | "start over / clear session" | `session reset` |

@@ -21,7 +21,7 @@ This repository contains a local Codex plugin and a small Python harness that he
 | Send | `send <label> --to <addr> --amount '<n> TICKER'` |
 | Swap | `swap quote`, `swap execute`, `swap status` |
 | Assets | `assets token`, `assets token-by-id` |
-| Device check | `genuine-check` |
+| Device check | `device-check` |
 
 ## Decision Tree
 
@@ -45,6 +45,7 @@ This is an independent local plugin. It is not affiliated with, endorsed by, or 
 ```bash
 python3 scripts/wallet_cli_harness.py -- session view
 python3 scripts/wallet_cli_workflow.py balance-all
+python3 scripts/wallet_cli_workflow.py device-check
 python3 scripts/wallet_cli_harness.py -- balances ethereum-1
 python3 scripts/wallet_cli_harness.py -- send ethereum-1 --to 0xRECIPIENT --amount '0.01 ETH' --dry-run
 ```

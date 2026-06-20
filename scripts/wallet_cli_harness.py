@@ -92,6 +92,14 @@ def emit_error(message: str, **extra: Any) -> int:
     return 2
 
 
+def text_or_empty(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    return str(value)
+
+
 def split_command(args: list[str]) -> tuple[str, list[str]]:
     if not args:
         return "", []
@@ -142,6 +150,7 @@ def final_json_from_stdout(stdout: str) -> tuple[list[Any], Any | None, list[str
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run wallet-cli and parse its JSON output.")
     parser.add_argument("--no-auto-output-json", action="store_true", help="Do not append --output json.")
+    parser.add_argument("--timeout-seconds", type=float, help="Kill wallet-cli if it does not finish within this many seconds.")
     parser.add_argument("wallet_args", nargs=argparse.REMAINDER, help="wallet-cli arguments, optionally after --")
     opts = parser.parse_args()
 
@@ -163,7 +172,31 @@ def main() -> int:
     if not binary:
         return emit_error("wallet-cli not found on PATH.")
 
-    proc = subprocess.run([binary, *wallet_args], capture_output=True, text=True)
+    try:
+        proc = subprocess.run(
+            [binary, *wallet_args],
+            capture_output=True,
+            text=True,
+            timeout=opts.timeout_seconds,
+        )
+    except subprocess.TimeoutExpired as exc:
+        result = {
+            "ok": False,
+            "walletCliTimedOut": True,
+            "timeoutSeconds": opts.timeout_seconds,
+            "command": ["wallet-cli", *wallet_args],
+            "events": [],
+            "final": None,
+            "unparsableStdout": [],
+            "stdoutBeforeTimeout": text_or_empty(exc.stdout).strip(),
+            "stderr": text_or_empty(exc.stderr).strip(),
+            "error": {
+                "message": f"wallet-cli did not finish within {opts.timeout_seconds:g} seconds.",
+            },
+        }
+        print(json.dumps(result, indent=2, sort_keys=True))
+        return 1
+
     events, final, unparsable = final_json_from_stdout(proc.stdout)
     result = {
         "ok": bool(isinstance(final, dict) and final.get("status") == "success"),

@@ -29,13 +29,38 @@ def emit(payload: dict[str, Any], exit_code: int = 0) -> int:
     return exit_code
 
 
-def run_harness(args: list[str], timeout: int | None = None) -> dict[str, Any]:
-    proc = subprocess.run(
-        [sys.executable, str(HARNESS), "--", *args],
-        capture_output=True,
-        text=True,
-        timeout=timeout,
-    )
+def text_or_empty(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    return str(value)
+
+
+def run_harness(args: list[str], timeout: int | None = None, process_timeout: int | None = None) -> dict[str, Any]:
+    harness_args = [sys.executable, str(HARNESS)]
+    if process_timeout is not None:
+        harness_args.extend(["--timeout-seconds", str(process_timeout)])
+    harness_args.extend(["--", *args])
+    try:
+        proc = subprocess.run(
+            harness_args,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired as exc:
+        return {
+            "ok": False,
+            "command": ["wallet-cli", *args],
+            "final": None,
+            "stdout": text_or_empty(exc.stdout).strip(),
+            "stderr": text_or_empty(exc.stderr).strip(),
+            "workflowTimedOut": True,
+            "timeoutSeconds": timeout,
+            "workflowError": "workflow-subprocess-timeout",
+        }
+
     try:
         payload = json.loads(proc.stdout)
     except json.JSONDecodeError:
@@ -192,13 +217,35 @@ def balance_all(include_zero_assets: bool = False) -> int:
 
 
 def discover(network: str) -> int:
-    result = run_harness(["account", "discover", network], timeout=None)
+    result = run_harness(["account", "discover", network, "--device-timeout", "60000"], timeout=75, process_timeout=70)
     return emit(
         {
             "ok": bool(result.get("ok")),
             "workflow": "discover",
             "network": network,
             "source": "wallet-cli",
+            "result": result,
+        },
+        0 if result.get("ok") else 1,
+    )
+
+
+def device_check(device_timeout_ms: int = 10000, timeout_seconds: int = 15) -> int:
+    result = run_harness(
+        ["genuine-check", "--device-timeout", str(device_timeout_ms)],
+        timeout=timeout_seconds + 5,
+        process_timeout=timeout_seconds,
+    )
+    final = final_object(result)
+    return emit(
+        {
+            "ok": bool(result.get("ok")),
+            "workflow": "device-check",
+            "source": "wallet-cli",
+            "bounded": True,
+            "deviceTimeoutMs": device_timeout_ms,
+            "timeoutSeconds": timeout_seconds,
+            "genuine": final.get("genuine") if final else None,
             "result": result,
         },
         0 if result.get("ok") else 1,
@@ -215,11 +262,17 @@ def main() -> int:
     discover_parser = subparsers.add_parser("discover", help="Discover accounts for a wallet-cli network.")
     discover_parser.add_argument("--network", required=True, choices=["bitcoin", "ethereum", "solana"])
 
+    device_parser = subparsers.add_parser("device-check", help="Run a bounded wallet-cli genuine-check.")
+    device_parser.add_argument("--device-timeout-ms", type=int, default=10000)
+    device_parser.add_argument("--timeout-seconds", type=int, default=15)
+
     args = parser.parse_args()
     if args.workflow == "balance-all":
         return balance_all(include_zero_assets=args.include_zero_assets)
     if args.workflow == "discover":
         return discover(network=args.network)
+    if args.workflow == "device-check":
+        return device_check(device_timeout_ms=args.device_timeout_ms, timeout_seconds=args.timeout_seconds)
     return emit({"ok": False, "error": f"Unknown workflow: {args.workflow}"}, 2)
 
 
