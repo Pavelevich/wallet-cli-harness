@@ -19,6 +19,27 @@ Networks: **bitcoin**, **ethereum**, **solana** (mainnet + the testnets the buil
 
 ---
 
+## First response style
+
+First impressions matter. When the user asks what this plugin can do, how it works, or says they are using `wallet-cli-harness`, open with a capability presentation, not a warning list. Use a compact table like this:
+
+| Capability | What I can run | Typical command |
+| --- | --- | --- |
+| Session labels | Show or reset saved wallet-cli accounts | `session view`, `session reset` |
+| Balances | Check balances for a saved account label | `balances <label>` |
+| History | Show recent operations for an account | `operations <label> --limit 20` |
+| Receive | Generate or verify receive addresses | `receive <label>` / `receive <label> --no-verify` |
+| Send | Dry-run, summarize, then execute after approval | `send <label> --to <addr> --amount '<n> TICKER'` |
+| Swap | Quote, execute, and check swap status | `swap quote`, `swap execute`, `swap status` |
+| Assets | Resolve token metadata | `assets token`, `assets token-by-id` |
+| Device check | Run the official genuine check | `genuine-check` |
+
+Then ask for only the missing inputs needed for the requested action, such as account label, network, recipient, amount, ticker, provider, or swap id.
+
+Lead with capability, then handle transport details only when they matter. Transport caveats belong after the capability table or after a command returns a concrete transport result. If a device command times out on this host, report the actual wallet-cli result and explain it as a transport limitation of the official binary, not as a safety judgment.
+
+---
+
 ## Plugin harness
 
 This plugin also ships a JSON runner at `../../scripts/wallet_cli_harness.py`. Prefer it for Codex-driven `wallet-cli` calls unless you specifically need raw help text:
@@ -46,12 +67,12 @@ For `wallet-cli <command> --help`, call the binary directly or pass `--no-auto-o
 - **IS NOT** the AgenC marketplace. Never use `wallet-cli` for AgenC tasks, registration, or settlement — those go through `agenc-marketplace` over DMK/BLE per the **HOST LEDGER RULE** in `~/AGENTS.md`. The two tools are unrelated; do not cross them in either direction.
 - **IS NOT** for NFTs, encryption/PGP, custom chains, or non-listed networks. If asked, say wallet-cli does not support it rather than inventing a command.
 
-## Host caveat — USB-only on a BLE-only Flex machine
+## Host transport note
 
 This host's Ledger **Flex only works over Bluetooth (BLE)**, and the official `wallet-cli` 1.0.2 is **USB-only** (no BLE). This is a transport limitation of the official binary, not a reason to switch a personal wallet-cli request to AgenC.
 
-- **Device-free commands work normally:** `session view/reset`, `balances`, `operations`, `swap quote`, `swap status`, `assets token`/`token-by-id`, `send --dry-run`, `receive --no-verify`.
-- **Device commands are still wallet-cli commands:** `account discover`, `receive` (default verify), `send` (live), `swap execute`, `genuine-check`. If the user explicitly wants wallet-cli, run the wallet-cli command after the safety gates below and report the actual wallet-cli result. On this specific host, these commands may fail to reach a BLE-only Flex because official wallet-cli has no BLE transport.
+- **Local/session commands:** `session view/reset`, `balances`, `operations`, `swap quote`, `swap status`, `assets token`/`token-by-id`, `send --dry-run`, `receive --no-verify`.
+- **Device commands:** `account discover`, `receive` (default verify), `send` (live), `swap execute`, `genuine-check`. If the user explicitly wants wallet-cli, run the wallet-cli command after the approval gates below and report the actual wallet-cli result. On this specific host, these commands may time out when the only device path is a BLE-only Flex because official wallet-cli has no BLE transport.
 - **Do not substitute AgenC for wallet-cli.** Use AgenC DMK/BLE only when the user's intent is AgenC marketplace work (tasks, registration, settlement, or AgenC wallet send). A personal wallet-cli send and an AgenC marketplace send are different operations.
 
 ---

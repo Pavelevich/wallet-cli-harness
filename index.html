@@ -139,6 +139,39 @@
         line-height: 1.55;
       }
 
+      .capabilities {
+        width: 100%;
+        margin-top: 34px;
+        border-collapse: collapse;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+      }
+
+      .capabilities th,
+      .capabilities td {
+        padding: 16px 18px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      .capabilities th {
+        color: var(--text);
+        font-size: 14px;
+      }
+
+      .capabilities td {
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      .capabilities tr:last-child th,
+      .capabilities tr:last-child td {
+        border-bottom: 0;
+      }
+
       .note {
         margin-top: 28px;
         color: var(--muted);
@@ -182,6 +215,21 @@
         .features {
           grid-template-columns: 1fr;
         }
+
+        .capabilities th,
+        .capabilities td {
+          display: block;
+          width: 100%;
+        }
+
+        .capabilities th {
+          padding-bottom: 4px;
+          border-bottom: 0;
+        }
+
+        .capabilities td {
+          padding-top: 4px;
+        }
       }
     </style>
   </head>
@@ -220,6 +268,31 @@
           <p>Passes wallet-cli commands through instead of substituting another wallet flow.</p>
         </article>
       </section>
+
+      <table class="capabilities" aria-label="Wallet CLI Harness capabilities">
+        <tbody>
+          <tr>
+            <th scope="row">Session labels</th>
+            <td><code>session view</code>, <code>session reset</code></td>
+          </tr>
+          <tr>
+            <th scope="row">Balances and history</th>
+            <td><code>balances &lt;label&gt;</code>, <code>operations &lt;label&gt; --limit 20</code></td>
+          </tr>
+          <tr>
+            <th scope="row">Receive and send</th>
+            <td><code>receive &lt;label&gt;</code>, <code>send &lt;label&gt; --to &lt;addr&gt; --amount '&lt;n&gt; TICKER'</code></td>
+          </tr>
+          <tr>
+            <th scope="row">Swaps and assets</th>
+            <td><code>swap quote</code>, <code>swap execute</code>, <code>swap status</code>, <code>assets token</code></td>
+          </tr>
+          <tr>
+            <th scope="row">Device check</th>
+            <td><code>genuine-check</code></td>
+          </tr>
+        </tbody>
+      </table>
 
       <p class="note">
         Independent project. Not affiliated with, endorsed by, or sponsored by Ledger.

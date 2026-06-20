@@ -9,6 +9,19 @@ This repository contains a local Codex plugin and a small Python harness that he
 - parses the final JSON object from stdout instead of trusting the process exit code;
 - preserves the wallet-cli command surface instead of substituting another wallet tool.
 
+## Capabilities
+
+| Capability | What it can run |
+| --- | --- |
+| Session labels | `session view`, `session reset` |
+| Balances | `balances <label>` |
+| History | `operations <label> --limit 20` |
+| Receive | `receive <label>`, `receive <label> --no-verify` |
+| Send | `send <label> --to <addr> --amount '<n> TICKER'` |
+| Swap | `swap quote`, `swap execute`, `swap status` |
+| Assets | `assets token`, `assets token-by-id` |
+| Device check | `genuine-check` |
+
 ## Project Status
 
 This is an independent local plugin. It is not affiliated with, endorsed by, or sponsored by Ledger.

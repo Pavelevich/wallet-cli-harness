@@ -1,6 +1,6 @@
 {
   "name": "ledger-wallet-cli",
-  "version": "0.1.0+codex.20260620144559",
+  "version": "0.1.0+codex.20260620145231",
   "description": "Codex JSON harness for the official @ledgerhq/wallet-cli command contract.",
   "author": {
     "name": "Tetsuo Arena"
@@ -8,18 +8,19 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Wallet CLI Harness",
-    "shortDescription": "Run wallet-cli flows with Codex-friendly JSON parsing.",
-    "longDescription": "Adds Codex instructions and a local harness for the official @ledgerhq/wallet-cli 1.0.2 contract: JSON output parsing, strict flag handling, dry-run-first send guidance, and a clear separation from AgenC DMK/BLE marketplace flows. The harness preserves the wallet-cli command surface instead of substituting AgenC for personal wallet-cli operations. This is an independent local plugin and is not affiliated with, endorsed by, or sponsored by Ledger.",
+    "shortDescription": "Present and run wallet-cli capabilities with JSON parsing.",
+    "longDescription": "Adds Codex instructions and a local harness for the official @ledgerhq/wallet-cli 1.0.2 contract: a capability-first presentation, JSON output parsing, strict flag handling, dry-run-first send guidance, and a clear separation from AgenC DMK/BLE marketplace flows. The harness preserves the wallet-cli command surface instead of substituting AgenC for personal wallet-cli operations. This is an independent local plugin and is not affiliated with, endorsed by, or sponsored by Ledger.",
     "developerName": "Tetsuo Arena",
     "category": "Productivity",
     "capabilities": [
       "wallet-cli command mapping",
       "NDJSON result parsing",
-      "wallet-cli command pass-through"
+      "wallet-cli command pass-through",
+      "Capability-first presentation"
     ],
     "brandColor": "#0A0A0A",
     "composerIcon": "./assets/icon.png",
     "logo": "./assets/logo.png",
-    "defaultPrompt": "Help me use wallet-cli safely."
+    "defaultPrompt": "Show me what wallet-cli can do."
   }
 }
