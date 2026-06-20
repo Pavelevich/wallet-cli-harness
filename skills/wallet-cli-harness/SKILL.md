@@ -21,7 +21,7 @@ Networks: **bitcoin**, **ethereum**, **solana** (mainnet + the testnets the buil
 
 ## Plugin harness
 
-This plugin also ships a conservative runner at `../../scripts/wallet_cli_harness.py`. Prefer it for Codex-driven `wallet-cli` calls unless you specifically need raw help text or an interactive device command:
+This plugin also ships a JSON runner at `../../scripts/wallet_cli_harness.py`. Prefer it for Codex-driven `wallet-cli` calls unless you specifically need raw help text:
 
 ```bash
 python3 ../../scripts/wallet_cli_harness.py -- session view
@@ -34,24 +34,25 @@ The harness:
 - validates flags for the selected official command before launch, because unknown flags are silently ignored by `wallet-cli`;
 - appends `--output json` when missing;
 - parses the final JSON object from stdout and reports `walletCliExitCode` separately;
-- refuses live `send`, `swap execute`, and USB device-touching commands by default. Use `--allow-live-send`, `--allow-swap-execute`, or `--allow-device` only after the same human-approval gates described below are satisfied.
+- executes the same wallet-cli command surface, including device-touching commands. It does not replace wallet-cli with AgenC and does not block live wallet-cli commands after the approval gates below are satisfied.
 
-For `wallet-cli <command> --help`, call the binary directly or pass `--no-auto-output-json` to the harness.
+For `wallet-cli <command> --help`, call the binary directly or pass `--no-auto-output-json` to the harness. If a new wallet-cli release adds a flag before this plugin is updated, update the harness allowlist before using that flag.
 
 ---
 
 ## Scope — what this skill is and is NOT
 
-- **IS:** the standalone `wallet-cli` binary for personal BTC/ETH/SOL wallet flows over USB.
-- **IS NOT** the AgenC marketplace. Never use `wallet-cli` for AgenC tasks, registration, or settlement — those go through `agenc-marketplace` over DMK/BLE per the **HOST LEDGER RULE** in `~/AGENTS.md`. The two tools are unrelated; do not cross them.
+- **IS:** the standalone `wallet-cli` binary for personal BTC/ETH/SOL wallet flows. When the user asks for wallet-cli behavior, run wallet-cli through this harness.
+- **IS NOT** the AgenC marketplace. Never use `wallet-cli` for AgenC tasks, registration, or settlement — those go through `agenc-marketplace` over DMK/BLE per the **HOST LEDGER RULE** in `~/AGENTS.md`. The two tools are unrelated; do not cross them in either direction.
 - **IS NOT** for NFTs, encryption/PGP, custom chains, or non-listed networks. If asked, say wallet-cli does not support it rather than inventing a command.
 
 ## Host caveat — USB-only on a BLE-only Flex machine
 
-This host's Ledger **Flex only works over Bluetooth (BLE)**, and the official `wallet-cli` is **USB-only** (no BLE). So on this machine:
+This host's Ledger **Flex only works over Bluetooth (BLE)**, and the official `wallet-cli` 1.0.2 is **USB-only** (no BLE). This is a transport limitation of the official binary, not a reason to switch a personal wallet-cli request to AgenC.
 
 - **Device-free commands work normally:** `session view/reset`, `balances`, `operations`, `swap quote`, `swap status`, `assets token`/`token-by-id`, `send --dry-run`, `receive --no-verify`.
-- **Device commands will NOT reach the Flex here:** `account discover`, `receive` (default verify), `send` (live), `swap execute`, `genuine-check`. They need a **USB-connected Ledger** (e.g. a Nano plugged in, or a Flex on a host where USB works). If the user only has the BLE Flex on this machine, tell them device commands can't run via official wallet-cli and stop — don't try to bridge BLE.
+- **Device commands are still wallet-cli commands:** `account discover`, `receive` (default verify), `send` (live), `swap execute`, `genuine-check`. If the user explicitly wants wallet-cli, run the wallet-cli command after the safety gates below and report the actual wallet-cli result. On this specific host, these commands may fail to reach a BLE-only Flex because official wallet-cli has no BLE transport.
+- **Do not substitute AgenC for wallet-cli.** Use AgenC DMK/BLE only when the user's intent is AgenC marketplace work (tasks, registration, settlement, or AgenC wallet send). A personal wallet-cli send and an AgenC marketplace send are different operations.
 
 ---
 
@@ -151,4 +152,14 @@ wallet-cli assets token ethereum 0xdAC17F958D2ee523a2206206994597C13D831ec7 --ou
 wallet-cli send ethereum-1 --to 0xRECIPIENT --amount '0.01 ETH' --dry-run --output json
 # Only after human approval, identical without --dry-run (needs USB device):
 wallet-cli send ethereum-1 --to 0xRECIPIENT --amount '0.01 ETH' --output json
+```
+
+Harness equivalents:
+
+```bash
+python3 ../../scripts/wallet_cli_harness.py -- session view
+python3 ../../scripts/wallet_cli_harness.py -- balances ethereum-1
+python3 ../../scripts/wallet_cli_harness.py -- operations ethereum-1 --limit 20
+python3 ../../scripts/wallet_cli_harness.py -- send ethereum-1 --to 0xRECIPIENT --amount '0.01 ETH' --dry-run
+python3 ../../scripts/wallet_cli_harness.py -- send ethereum-1 --to 0xRECIPIENT --amount '0.01 ETH'
 ```

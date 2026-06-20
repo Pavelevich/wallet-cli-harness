@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Hardened runner for the official @ledgerhq/wallet-cli JSON contract.
 
-This wrapper is intentionally conservative. It validates known flags before
-launching wallet-cli, appends `--output json` when safe, and reports outcome
-from the final JSON object on stdout rather than trusting the process exit code.
+This wrapper preserves wallet-cli's command surface while adding Codex-friendly
+parsing. It validates known flags before launching wallet-cli, appends
+`--output json` when safe, and reports outcome from the final JSON object on
+stdout rather than trusting the process exit code.
 """
 
 from __future__ import annotations
@@ -120,16 +121,6 @@ def validate_flags(command: str, tail: list[str]) -> str | None:
     return None
 
 
-def is_device_command(command: str, tail: list[str]) -> bool:
-    if command in {"account discover", "genuine-check", "swap execute"}:
-        return True
-    if command == "receive":
-        return not has_flag(tail, "--no-verify")
-    if command == "send":
-        return not has_flag(tail, "--dry-run")
-    return False
-
-
 def final_json_from_stdout(stdout: str) -> tuple[list[Any], Any | None, list[str]]:
     events: list[Any] = []
     final: Any | None = None
@@ -149,10 +140,7 @@ def final_json_from_stdout(stdout: str) -> tuple[list[Any], Any | None, list[str
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run wallet-cli with Codex safety rails.")
-    parser.add_argument("--allow-device", action="store_true", help="Allow USB device-touching wallet-cli commands.")
-    parser.add_argument("--allow-live-send", action="store_true", help="Allow send without --dry-run.")
-    parser.add_argument("--allow-swap-execute", action="store_true", help="Allow swap execute.")
+    parser = argparse.ArgumentParser(description="Run wallet-cli and parse its JSON output.")
     parser.add_argument("--no-auto-output-json", action="store_true", help="Do not append --output json.")
     parser.add_argument("wallet_args", nargs=argparse.REMAINDER, help="wallet-cli arguments, optionally after --")
     opts = parser.parse_args()
@@ -167,16 +155,6 @@ def main() -> int:
     error = validate_flags(command, tail)
     if error:
         return emit_error(error, command=command)
-
-    if command == "send" and not has_flag(tail, "--dry-run") and not opts.allow_live_send:
-        return emit_error("Refusing live `wallet-cli send` without --allow-live-send.", command=command)
-    if command == "swap execute" and not opts.allow_swap_execute:
-        return emit_error("Refusing `wallet-cli swap execute` without --allow-swap-execute.", command=command)
-    if is_device_command(command, tail) and not opts.allow_device:
-        return emit_error(
-            "Refusing USB device-touching wallet-cli command on this BLE-only Flex host without --allow-device.",
-            command=command,
-        )
 
     if not opts.no_auto_output_json and "--help" not in tail and "-h" not in tail and not has_flag(tail, "--output"):
         wallet_args.extend(["--output", "json"])

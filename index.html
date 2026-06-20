@@ -6,7 +6,7 @@
     <title>Wallet CLI Harness</title>
     <meta
       name="description"
-      content="Independent Codex safety rails for the official @ledgerhq/wallet-cli command contract."
+      content="Independent Codex JSON harness for the official @ledgerhq/wallet-cli command contract."
     />
     <style>
       :root {
@@ -192,9 +192,9 @@
           <p class="eyebrow">Codex plugin</p>
           <h1 id="title">Wallet CLI Harness</h1>
           <p class="lead">
-            A small safety layer for Codex agents that run <code>@ledgerhq/wallet-cli</code>:
-            strict flag checks, JSON result parsing, and conservative rails around irreversible
-            hardware-wallet actions.
+            A small JSON harness for Codex agents that run <code>@ledgerhq/wallet-cli</code>:
+            strict flag checks, final-object result parsing, and the same wallet-cli command
+            surface for personal hardware-wallet operations.
           </p>
           <div class="actions">
             <a class="button" href="https://github.com/pavelevich/wallet-cli-harness">View on GitHub</a>
@@ -216,8 +216,8 @@
           <p>Reads the final JSON object from stdout and keeps the process exit code as metadata.</p>
         </article>
         <article class="feature">
-          <h2>Send rails</h2>
-          <p>Blocks live sends and device-touching commands by default unless an explicit override is used.</p>
+          <h2>Command parity</h2>
+          <p>Passes wallet-cli commands through instead of substituting another wallet flow.</p>
         </article>
       </section>
 

@@ -1,13 +1,13 @@
 # Wallet CLI Harness
 
-Independent Codex safety rails for the official `@ledgerhq/wallet-cli` command contract.
+Independent Codex JSON harness for the official `@ledgerhq/wallet-cli` command contract.
 
-This repository contains a local Codex plugin and a small Python harness that helps Codex run `wallet-cli` more safely:
+This repository contains a local Codex plugin and a small Python harness that helps Codex run `wallet-cli` predictably:
 
 - validates command flags before launch;
 - appends `--output json` when appropriate;
 - parses the final JSON object from stdout instead of trusting the process exit code;
-- refuses live sends, swap execution, and USB device-touching commands by default.
+- preserves the wallet-cli command surface instead of substituting another wallet tool.
 
 ## Project Status
 
@@ -29,7 +29,7 @@ python3 scripts/wallet_cli_harness.py -- balances ethereum-1
 python3 scripts/wallet_cli_harness.py -- send ethereum-1 --to 0xRECIPIENT --amount '0.01 ETH' --dry-run
 ```
 
-Live sends require explicit override flags and should only happen after the dry-run and human approval gates documented in the skill.
+Live sends are passed through to wallet-cli and should only happen after the dry-run and human approval gates documented in the skill.
 
 ## Development
 
