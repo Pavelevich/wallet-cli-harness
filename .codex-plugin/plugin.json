@@ -1,6 +1,6 @@
 {
   "name": "ledger-wallet-cli",
-  "version": "0.1.0+codex.20260620153034",
+  "version": "0.1.0+codex.20260620154743",
   "description": "Codex JSON harness for the official @ledgerhq/wallet-cli command contract.",
   "author": {
     "name": "Tetsuo Arena"
@@ -9,12 +9,13 @@
   "interface": {
     "displayName": "Wallet CLI Harness",
     "shortDescription": "Present and run wallet-cli capabilities with JSON parsing.",
-    "longDescription": "Adds Codex instructions and a local harness for the official @ledgerhq/wallet-cli 1.0.2 contract: a capability-first presentation, JSON output parsing, strict flag handling, dry-run-first send guidance, and a clear separation from AgenC DMK/BLE marketplace flows. The harness preserves the wallet-cli command surface instead of substituting AgenC for personal wallet-cli operations. This is an independent local plugin and is not affiliated with, endorsed by, or sponsored by Ledger.",
+    "longDescription": "Adds Codex instructions and a local harness for the official @ledgerhq/wallet-cli 1.0.2 contract: a capability-first presentation, wallet-cli-only routing, balance-all workflow, JSON output parsing, strict flag handling, and dry-run-first send guidance. The harness preserves the wallet-cli command surface instead of substituting another wallet stack. This is an independent local plugin and is not affiliated with, endorsed by, or sponsored by Ledger.",
     "developerName": "Tetsuo Arena",
     "category": "Productivity",
     "capabilities": [
       "wallet-cli command mapping",
       "NDJSON result parsing",
+      "wallet-cli-only workflows",
       "wallet-cli command pass-through",
       "Capability-first presentation"
     ],
@@ -22,6 +23,6 @@
     "websiteURL": "https://pavelevich.github.io/wallet-cli-harness/",
     "composerIcon": "./assets/wallet-cli-harness-logo.png",
     "logo": "./assets/wallet-cli-harness-logo.png",
-    "defaultPrompt": "Use the decision tree to route wallet-cli requests."
+    "defaultPrompt": "Use the wallet-cli-only decision tree; route balances through balance-all."
   }
 }

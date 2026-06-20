@@ -1,127 +1,171 @@
 ---
 name: wallet-cli-harness
-description: Drive the official standalone @ledgerhq/wallet-cli command contract with Codex safety rails for hardware-wallet flows on bitcoin, ethereum, and solana — account discover, session view/reset, balances, operations, receive, send (with dry-run), swap quote/execute/status, genuine-check, assets token/token-by-id. Use for any `wallet-cli` command and for mapping informal wallet requests to the right command. NOT for AgenC marketplace Ledger ops (those stay on the agenc DMK/BLE path in AGENTS.md).
+description: "Route Codex requests to the official standalone @ledgerhq/wallet-cli contract for bitcoin, ethereum, and solana wallet flows: account discover, session view/reset, balances, operations, receive, send with dry-run and approval, swap quote/execute/status, genuine-check, and asset lookup. Includes a wallet-cli-only decision tree and JSON harness."
 ---
 
 # Wallet CLI Harness
 
-Independent Codex safety rails for the official, standalone `@ledgerhq/wallet-cli` package. This plugin is not affiliated with, endorsed by, or sponsored by Ledger.
+Independent Codex operating instructions for the official standalone `@ledgerhq/wallet-cli` package. This plugin is not affiliated with, endorsed by, or sponsored by Ledger.
 
-The CLI is for **USB** hardware-wallet flows, built on the Device Management Kit (DMK). Installed on PATH as `wallet-cli` (`/opt/homebrew/bin/wallet-cli`, currently `@ledgerhq/wallet-cli@1.0.2`). Invoke it directly:
+Installed command:
 
 ```bash
 wallet-cli <command> [flags] --output json
 ```
 
-Networks: **bitcoin**, **ethereum**, **solana** (mainnet + the testnets the build supports). Tokens are supported on those chains.
+Supported top-level wallet-cli areas: session labels, account discovery, balances, operations, receive addresses, sends, swaps, token metadata, and genuine checks.
 
-> **This targets the official 1.0.2 release, not a fork.** Use only the commands and flags listed in this skill. Decide success from the final JSON object, not from the process exit code. The harness exists because the published CLI accepts unknown flags silently.
+This targets the official 1.0.2 command contract. Decide success from the final JSON object, not from the process exit code. The harness exists because the published CLI can accept unknown flags without failing.
 
----
+## Wallet-CLI-Only Routing
 
-## First response style
+When this plugin is active, stay on the official `wallet-cli` path.
 
-First impressions matter. When the user asks what this plugin can do, how it works, or says they are using `wallet-cli-harness`, open with a capability presentation, not a warning list. Use a compact table like this:
+Allowed command surfaces:
+
+- `python3 <plugin-root>/scripts/wallet_cli_workflow.py ...`
+- `python3 <plugin-root>/scripts/wallet_cli_harness.py -- ...`
+- `wallet-cli ... --help` when raw official help text is needed
+
+Do not use local secret-store files, operating-system hardware scans, direct blockchain endpoint queries, remembered balances, previous screenshots, or unrelated wallet tools for wallet balance, discovery, history, receive, send, swap, token, or genuine-check requests.
+
+If the user says a device is connected by cable during a wallet-cli flow, continue with the requested wallet-cli action. Do not pivot into host diagnosis unless the user explicitly asks for a general computer hardware inventory.
+
+Resolve `<plugin-root>` as the directory two levels above this `SKILL.md`. In the development checkout it is:
+
+```bash
+/Users/tetsuoarena/plugins/ledger-wallet-cli
+```
+
+In an installed plugin cache, use the installed cache path that contains this `SKILL.md`.
+
+## First Response Style
+
+First impressions matter. When the user asks what this plugin can do, how it works, or says they are using `wallet-cli-harness`, open with a capability presentation, then ask what to run.
 
 | Capability | What I can run | Typical command |
 | --- | --- | --- |
 | Session labels | Show or reset saved wallet-cli accounts | `session view`, `session reset` |
-| Balances | Check balances for a saved account label | `balances <label>` |
+| Balances | Check every saved label or one saved label | `balance-all`, `balances <label>` |
+| Account discovery | Discover accounts for a network | `account discover <network>` |
 | History | Show recent operations for an account | `operations <label> --limit 20` |
-| Receive | Generate or verify receive addresses | `receive <label>` / `receive <label> --no-verify` |
+| Receive | Generate or verify receive addresses | `receive <label>`, `receive <label> --no-verify` |
 | Send | Dry-run, summarize, then execute after approval | `send <label> --to <addr> --amount '<n> TICKER'` |
 | Swap | Quote, execute, and check swap status | `swap quote`, `swap execute`, `swap status` |
 | Assets | Resolve token metadata | `assets token`, `assets token-by-id` |
 | Device check | Run the official genuine check | `genuine-check` |
 
-Then ask for only the missing inputs needed for the requested action, such as account label, network, recipient, amount, ticker, provider, or swap id.
+Ask only for missing inputs needed for the requested action, such as network, account label, recipient, amount, ticker, provider, or swap id.
 
-Lead with capability, then handle transport details only when they matter. Transport caveats belong after the capability table or after a command returns a concrete transport result. If a device command times out on this host, report the actual wallet-cli result and explain it as a transport limitation of the official binary, not as a safety judgment.
+## Decision Tree
 
----
+Follow this tree for every user message while the plugin is active.
 
-## Decision tree
+1. **Capability request**
+   If the user asks what the plugin can do, show the capability table above and ask what to run.
 
-Follow this tree for every user message while the plugin is active. Do not skip directly to general shell tools.
+2. **Balance or holdings**
+   If the user asks for wallet balance, balances, holdings, funds, total, "my wallet", "what do I have", or similar, run:
 
-1. **Is the request about AgenC marketplace?**
-   If it mentions AgenC tasks, agents, registration, marketplace settlement, creator/worker flows, or AgenC wallet send, stop using this plugin and follow `~/AGENTS.md`.
-   Otherwise continue as a personal `wallet-cli` request.
+   ```bash
+   python3 <plugin-root>/scripts/wallet_cli_workflow.py balance-all
+   ```
 
-2. **Is the user asking what the plugin can do?**
-   Show the capability table from "First response style", then ask what to run.
+   Summarize nonzero balances first, then zero labels. Mention how many saved labels were checked. Do not inspect any other wallet source.
 
-3. **Is the user asking for devices, wallet devices, connected wallet, discover, scan, import, or accounts?**
-   Route to account discovery. Required parameter: `network`.
-   If network is missing, ask exactly: `Which network should I scan: bitcoin, ethereum, or solana?`
+3. **Account discovery, connected wallet, wallet device, scan, import, or accounts**
+   Route to wallet-cli account discovery. Required input: network.
+
+   If network is missing, ask exactly:
+
+   ```text
+   Which network should I scan: bitcoin, ethereum, or solana?
+   ```
+
    If network is present, run:
-   `python3 ../../scripts/wallet_cli_harness.py -- account discover <network>`
-   Report discovered labels and addresses from the final JSON object. If wallet-cli returns a transport error, report that result and ask whether to retry.
 
-4. **Is the user asking for wallet, balance, holdings, funds, total, or "what do I have"?**
-   Run:
-   `python3 ../../scripts/wallet_cli_harness.py -- session view`
-   Then run balances for each saved label:
-   `python3 ../../scripts/wallet_cli_harness.py -- balances <label>`
-   Summarize nonzero balances first, then zero balances. Mention the number of labels checked. Do not use remembered labels or prior balances.
+   ```bash
+   python3 <plugin-root>/scripts/wallet_cli_workflow.py discover --network <network>
+   ```
 
-5. **Is the user asking for history, transactions, operations, activity, deposits, or sends?**
-   Required parameter: account label.
-   If label is missing, run `session view`, show available labels, and ask which label to inspect.
-   If label is present, run:
-   `python3 ../../scripts/wallet_cli_harness.py -- operations <label> --limit 20`
+   Report discovered labels and addresses from the final JSON object. If wallet-cli returns an error, report that wallet-cli result and ask whether to retry or adjust inputs.
 
-6. **Is the user asking for a receive address or deposit address?**
-   Required parameter: account label.
-   If label is missing, run `session view`, show labels, and ask which label.
-   If the user asks for verified receive, run:
-   `python3 ../../scripts/wallet_cli_harness.py -- receive <label>`
-   If the user asks for a quick/software address, run:
-   `python3 ../../scripts/wallet_cli_harness.py -- receive <label> --no-verify`
+4. **Session labels**
+   If the user asks for saved accounts, labels, or session state, run:
 
-7. **Is the user asking to send, transfer, pay, withdraw, or move funds?**
-   Required parameters: account label, recipient, amount with ticker.
-   If any are missing, ask for only the missing values.
-   First run dry-run:
-   `python3 ../../scripts/wallet_cli_harness.py -- send <label> --to <recipient> --amount '<amount TICKER>' --dry-run`
-   Summarize recipient, amount, and fee from the final JSON object. Ask for explicit approval before live send.
-   After approval, run the same command without `--dry-run`.
+   ```bash
+   python3 <plugin-root>/scripts/wallet_cli_harness.py -- session view
+   ```
 
-8. **Is the user asking to swap, convert, trade, quote, or check swap status?**
+5. **History or activity**
+   Required input: account label.
+
+   If label is missing, run `session view`, show available labels, and ask which label to inspect. If label is present, run:
+
+   ```bash
+   python3 <plugin-root>/scripts/wallet_cli_harness.py -- operations <label> --limit 20
+   ```
+
+6. **Receive or deposit address**
+   Required input: account label.
+
+   If label is missing, run `session view`, show labels, and ask which label. If the user asks for verified receive, run:
+
+   ```bash
+   python3 <plugin-root>/scripts/wallet_cli_harness.py -- receive <label>
+   ```
+
+   If the user asks for a quick address without device verification, run:
+
+   ```bash
+   python3 <plugin-root>/scripts/wallet_cli_harness.py -- receive <label> --no-verify
+   ```
+
+7. **Send, transfer, pay, withdraw, or move funds**
+   Required inputs: account label, recipient, amount with ticker.
+
+   If any are missing, ask only for the missing values. First run a dry-run:
+
+   ```bash
+   python3 <plugin-root>/scripts/wallet_cli_harness.py -- send <label> --to <recipient> --amount '<amount TICKER>' --dry-run
+   ```
+
+   Summarize recipient, amount, and fee from the final JSON object. Ask for explicit approval before live send. After approval, run the same command without `--dry-run`.
+
+8. **Swap, convert, trade, quote, or swap status**
    For quotes, collect from asset, to asset, amount, and source/destination account or fresh-address flags, then run `swap quote`.
+
    For execute, collect provider, from, to, amount, account, to-account, and fee strategy if needed, then run `swap execute`.
+
    For status, collect swap id and provider, then run `swap status`.
 
-9. **Is the user asking what a token is?**
-   If they provide a token address plus network, run `assets token <network> <address>`.
-   If they provide a token id, run `assets token-by-id <id>`.
-   Ask for the missing network/address/id only if needed.
+9. **Token metadata**
+   If the user provides a token address plus network, run `assets token <network> <address>`. If they provide a token id, run `assets token-by-id <id>`. Ask for the missing network/address/id only if needed.
 
-10. **Is the user asking for genuine check or authenticity?**
+10. **Genuine check**
     Run:
-    `python3 ../../scripts/wallet_cli_harness.py -- genuine-check`
 
-11. **Is the user asking to clear/reset/start over?**
+    ```bash
+    python3 <plugin-root>/scripts/wallet_cli_harness.py -- genuine-check
+    ```
+
+11. **Reset or start over**
     Run:
-    `python3 ../../scripts/wallet_cli_harness.py -- session reset`
 
-12. **If the request is ambiguous**
-    Ask one routing question tied to wallet-cli capabilities. Do not provide a generic Mac inventory or host diagnosis.
+    ```bash
+    python3 <plugin-root>/scripts/wallet_cli_harness.py -- session reset
+    ```
 
----
+12. **Ambiguous request**
+    Ask one routing question tied to wallet-cli capabilities. Do not provide a generic computer inventory or host diagnosis.
 
-## Stay inside the plugin
+## Response Examples
 
-When this plugin is active, keep the work centered on the official `wallet-cli` contract and this harness.
+For `check the balance of my wallet`:
 
-- For wallet tasks, run `../../scripts/wallet_cli_harness.py` instead of relying on remembered terminal output, local notes, OS device inventories, or general shell exploration.
-- For "what can you do", "show my wallet", "balance", "history", "receive", "send", "swap", "token", "genuine", or "device" requests in this context, map the request through the decision tree first.
-- Treat "devices", "wallet devices", "find my wallet", "discover", "scan", and "accounts" as the account discovery workflow unless the user explicitly asks for a general Mac hardware inventory.
-- Only inspect host hardware inventory when the user explicitly asks for a general Mac hardware inventory outside the wallet-cli flow. Do not drift into Mac inventory during wallet-cli flows.
-- Do not use recalled balances, remembered labels, previous screenshots, or prior thread summaries as authority. Re-run `session view`, then the relevant `balances`/`operations` command.
-- Do not switch to AgenC for personal `wallet-cli` requests. AgenC is only for AgenC marketplace intent.
-
-### Response examples
+```text
+I will read saved wallet-cli labels with session view, then check balances for each saved label through wallet-cli.
+```
 
 For `discover accounts` with no network:
 
@@ -135,157 +179,112 @@ For `find my wallet devices` or `list wallet devices`:
 I can run wallet-cli account discovery next. Which network should I scan: bitcoin, ethereum, or solana?
 ```
 
-For `check the balance of my wallet` with no label:
+For `the device is connected by cable` during a wallet-cli flow:
 
 ```text
-I’ll read saved wallet-cli labels with session view, then check balances for the saved accounts.
+Got it. I will continue with the wallet-cli command path. Which wallet-cli action should I run: discover accounts, check balances, receive, send, history, or genuine check?
 ```
 
-Keep the wording action-oriented: say what wallet-cli operation you can run next, ask for the missing parameter, or report the concrete JSON result from the harness.
+## Plugin Scripts
 
----
-
-## Plugin harness
-
-This plugin also ships a JSON runner at `../../scripts/wallet_cli_harness.py`. Prefer it for Codex-driven `wallet-cli` calls unless you specifically need raw help text:
+Prefer the workflow script for common informal requests:
 
 ```bash
-python3 ../../scripts/wallet_cli_harness.py -- session view
-python3 ../../scripts/wallet_cli_harness.py -- balances ethereum-1
-python3 ../../scripts/wallet_cli_harness.py -- send ethereum-1 --to 0xRECIPIENT --amount '0.01 ETH' --dry-run
+python3 <plugin-root>/scripts/wallet_cli_workflow.py balance-all
+python3 <plugin-root>/scripts/wallet_cli_workflow.py discover --network solana
+```
+
+Use the lower-level harness for direct wallet-cli commands:
+
+```bash
+python3 <plugin-root>/scripts/wallet_cli_harness.py -- session view
+python3 <plugin-root>/scripts/wallet_cli_harness.py -- balances ethereum-1
+python3 <plugin-root>/scripts/wallet_cli_harness.py -- send ethereum-1 --to 0xRECIPIENT --amount '0.01 ETH' --dry-run
 ```
 
 The harness:
 
-- validates flags for the selected official command before launch, because unknown flags are silently ignored by `wallet-cli`;
+- validates flags for the selected official command before launch;
 - appends `--output json` when missing;
 - parses the final JSON object from stdout and reports `walletCliExitCode` separately;
-- executes the same wallet-cli command surface, including device-touching commands. It does not replace wallet-cli with AgenC and does not block live wallet-cli commands after the approval gates below are satisfied.
+- preserves the wallet-cli command surface instead of substituting any other wallet tool.
 
 For `wallet-cli <command> --help`, call the binary directly or pass `--no-auto-output-json` to the harness. If a new wallet-cli release adds a flag before this plugin is updated, update the harness allowlist before using that flag.
 
----
+## Output Contract
 
-## Scope — what this skill is and is NOT
+Always pass `--output json` when parsing. In JSON mode stdout is NDJSON: zero or more intermediate events, then one final object.
 
-- **IS:** the standalone `wallet-cli` binary for personal BTC/ETH/SOL wallet flows. When the user asks for wallet-cli behavior, run wallet-cli through this harness.
-- **IS NOT** the AgenC marketplace. Never use `wallet-cli` for AgenC tasks, registration, or settlement — those go through `agenc-marketplace` over DMK/BLE per the **HOST LEDGER RULE** in `~/AGENTS.md`. The two tools are unrelated; do not cross them in either direction.
-- **IS NOT** for NFTs, encryption/PGP, custom chains, or non-listed networks. If asked, say wallet-cli does not support it rather than inventing a command.
+Decide the outcome from the final JSON object, not from the exit code. The official binary may exit `0` even on command errors. Dispatch in this order, per line:
 
-## Output contract (official 1.0.2) — parse stdout, never the exit code
+1. `{"type":"device-state", ...}` - non-terminal device progress. Relay `message` to the human and keep waiting.
+2. `{"type":"pre-verify-address", "address": ...}` - emitted by `receive` before on-device confirmation. Show the address so the human can compare it to the device screen.
+3. `{"status":"success", "command": ..., ...data, "timestamp": ...}` - success. Read the per-command data keys.
+4. `{"ok":false, "error":{"command": ..., "message": ...}}` - command failed. There is only `message`; do not invent structured error fields.
+5. `{"ok":false, "error":{"kind": "command-not-found"|"validation", "available":[...]?, ...}}` - framework error, usually a bad command or malformed value. Fix the invocation.
 
-Always pass `--output json` when you will parse. In JSON mode **stdout is NDJSON**: zero or more intermediate events, then exactly one final object.
+Success keys on `status`; errors key on `ok`. Help/version in agent mode come back as `{"ok":true,"data":{"type":"help"|"version", ...}}`. Amounts in JSON are formatted strings with ticker, for example `"0.5 ETH"`.
 
-**Decide the outcome from the final JSON object, NOT from the exit code.** The official binary frequently exits `0` even on errors — `$?` is unreliable. Dispatch in this order, per line:
+## Critical Safety: Unknown Flags
 
-1. `{"type":"device-state", ...}` — non-terminal device progress. Relay `message` to the human; keep waiting.
-2. `{"type":"pre-verify-address", "address": ...}` — emitted by `receive` before on-device confirmation; show the address so the human can compare it to the device screen.
-3. `{"status":"success", "command": ..., ...data, "timestamp": ...}` — **success.** Read the per-command data keys.
-4. `{"ok":false, "error":{"command": ..., "message": ...}}` — **command failed.** There is **only `message`** (no `code`, no `retryable`). Read the message; do not blind-retry.
-5. `{"ok":false, "error":{"kind": "command-not-found"|"validation", "available":[...]?, ...}}` — **framework (bunli) error**, usually a bad command or a malformed value. Fix the invocation.
+The official CLI does not reliably fail on unknown flags. A typo or invented flag can be ignored while the command proceeds.
 
-Success keys on `status`; errors key on `ok`. Help/version in agent mode come back as `{"ok":true,"data":{"type":"help"|"version", ...}}`. Amounts in JSON are formatted strings with ticker (e.g. `"0.5 ETH"`), not atomic integers.
+- Never invent or guess a flag. Verify flags against this skill or `wallet-cli <command> --help`.
+- A botched `--dry-run` can turn a send into a live action. After any dry-run, confirm the success object proves it was a dry-run and shows no broadcast or transaction hash.
 
----
+## Money Movement Rails
 
-## Transport troubleshooting
+1. Dry-run first, verify the echo. Before any live `send`, run the byte-identical command with `--dry-run --output json`, confirm recipient, amount, fee, and no broadcast, show that to the human, get explicit approval, then re-run without `--dry-run`.
+2. One device command at a time. Never run two device-touching commands concurrently across sessions or terminals.
+3. Never kill a command waiting on the device. Let it time out by itself.
+4. Never auto-retry a rejection. Ask whether to retry or abort.
+5. After any ambiguous failure following a sign prompt, run `operations <account>` or `swap status` before re-sending.
+6. `receive --no-verify` is unverified by the trusted display. Prefer plain `receive` when the user needs a trusted-display address.
+7. Ambiguous request means ask. Missing recipient, network, ticker, account label, or amount should stop the action until clarified.
 
-Keep transport discussion reactive. Do not lead with it.
+## Sessions And Labels
 
-If a wallet-cli device command returns a timeout or transport error on this host, say what wallet-cli returned, then add: "The official wallet-cli 1.0.2 has no BLE transport, so this host may need a wallet-cli-reachable Ledger for that device command." Do not switch tools unless the user changes intent away from wallet-cli.
+`account discover` saves discovered accounts to a local wallet-cli session under labels like `ethereum-1` or `solana-3`. Commands that take an account should use a session label. Run `session view` to list labels.
 
-Use AgenC DMK/BLE only when the user's intent is AgenC marketplace work. A personal wallet-cli send and an AgenC marketplace send are different operations.
+- `session view` returns `{accounts:[{label, descriptor}]}`.
+- `session reset` clears the wallet-cli session store.
 
----
+## Commands
 
-## CRITICAL safety: unknown flags are silently dropped
-
-The official CLI does **not** validate flags. A typo or invented flag is **silently ignored** and the command proceeds anyway. Consequences:
-
-- **Never invent or guess a flag.** Verify every flag against `wallet-cli <command> --help` first. If a needed flag isn't there, stop and ask — don't add flags one at a time hoping one sticks.
-- **A botched `--dry-run` can go LIVE.** If you mistype `--dry-run` (e.g. `--dryrun`), it's dropped and `send` **signs and broadcasts for real**. So: after any dry-run, **confirm the success object proves it was a dry run** (it shows the prepared recipient/amount/fee and **no broadcast/tx hash**). If you can't confirm it was a dry run, treat it as a live send and run the duplicate-spend check before doing anything else.
-
----
-
-## Money-movement rails (hardware = irreversible)
-
-1. **Dry-run first, verify the echo.** Before any live `send`, run the byte-identical command with `--dry-run --output json`, confirm the result echoes the intended recipient + amount + fee and shows no broadcast, show that to the human, get explicit approval, then re-run the identical command **without** `--dry-run`. (`swap execute` has **no** dry-run — see below.)
-2. **One device command at a time.** Never run two device-touching commands concurrently (across all sessions/terminals). Concurrent DMK sessions corrupt the transport (garbled output). Run sequentially.
-3. **Never kill a command waiting on the device.** A `device-state` event with `awaiting_approval` means it's healthy and waiting on the human. It times out by itself after `--device-timeout` (default 60000 ms). Let it run.
-4. **Never auto-retry a rejection.** If the human refused on the device, that was deliberate — ask whether to retry or abort.
-5. **After any ambiguous failure following a sign prompt** (timeout, disconnect, crash, unparseable output), the tx may already be signed and broadcast. Run `operations <account>` (or `swap status` for swaps) to check **before** re-sending. Never re-send on a hunch.
-6. **`receive --no-verify` is unattested** — a software-derived address never confirmed on the trusted display. Don't hand it to third parties for deposits; prefer plain `receive` (on-device verify) when a USB device is available.
-7. **Ambiguous request → ask, don't guess.** Missing recipient, missing network, an amount with no ticker, an unclear account — stop and ask. A wrong guess on a hardware wallet can mean irreversible loss.
-
----
-
-## Sessions & labels
-
-`account discover` saves discovered accounts to a local session under a **label** (e.g. `ethereum-1`, `solana-3`). All `--account` flags take a **session label only** — raw descriptors/xprv are rejected. Run `account discover <network>` first to populate the session, then `session view` to list labels.
-
-- `session view` → `{accounts:[{label, descriptor}]}`. `session reset` wipes the store.
-
----
-
-## Commands (official flags, verified against `--help`)
-
-| Command | Device? | Key flags (official) |
+| Command | Device interaction | Key flags |
 | --- | --- | --- |
-| `session view` / `session reset` | No | — |
+| `session view` / `session reset` | No | `--output` |
 | `balances` | No | `--account/-a`, `--output` |
 | `operations` | No | `--account/-a`, `--limit/-l`, `--cursor`, `--output` |
 | `assets token` / `assets token-by-id` | No | positional `<network> <addr>` / `<id>`, `--output` |
 | `swap quote` | No | `--from/-f`, `--to/-t`, `--amount`, `--from-account`/`--from-fresh-address`, `--to-account`/`--to-fresh-address`, `--output` |
 | `swap status` | No | `--swap-id`, `--provider`, `--output` |
-| `send --dry-run` | No | (see `send` row) |
-| `account discover` | **Yes** | `--network/-n` (or positional), `--output`, `--device-timeout` |
-| `receive` | **Yes** (default) | `--account/-a`, `--verify/-v` (default **true**; `--no-verify` skips device), `--output`, `--device-timeout` |
-| `send` (live) | **Yes** | `--account/-a`, `--to/-t`, `--amount` (ticker required), `--fee-per-byte` & `--rbf` (BTC), `--mode`/`--validator`/`--stake-account`/`--memo` (SOL), `--data` (EVM calldata), `--dry-run`, `--output`, `--device-timeout` |
-| `genuine-check` | **Yes** | `--output`, `--device-timeout` (device must be on the dashboard) |
-| `swap execute` | **Yes** | `--from/-f`, `--to/-t`, `--provider`, `--amount`, `--account/-a`, `--to-account`, `--fee-strategy`, `--output` — **no `--dry-run`, no `--device-timeout`** |
+| `send --dry-run` | No | same as `send`, plus `--dry-run` |
+| `account discover` | Yes | `--network/-n`, `--output`, `--device-timeout` |
+| `receive` | Yes by default | `--account/-a`, `--verify/-v`, `--no-verify`, `--output`, `--device-timeout` |
+| `send` live | Yes | `--account/-a`, `--to/-t`, `--amount`, `--fee-per-byte`, `--rbf`, `--mode`, `--validator`, `--stake-account`, `--memo`, `--data`, `--dry-run`, `--output`, `--device-timeout` |
+| `genuine-check` | Yes | `--output`, `--device-timeout` |
+| `swap execute` | Yes | `--from/-f`, `--to/-t`, `--provider`, `--amount`, `--account/-a`, `--to-account`, `--fee-strategy`, `--output` |
 
-### Notes
-- `send` `--amount` **must include a ticker** (`'0.001 BTC'`, `'0.01 ETH'`, `'100 USDT'`). There is no `--token` flag; the ticker drives asset resolution.
-- `--data` (EVM calldata) is an arbitrary contract call — make the human explain and confirm it before signing.
-- `swap execute` goes to the device but in JSON mode is effectively silent until the final object; it is irreversible once approved on-device. There is no dry-run and no device-timeout — brief the human first, never kill it, and use `swap status --swap-id <id> --provider <p>` as the only recovery/monitoring path.
-- `genuine-check` needs the device unlocked **on the dashboard** (exit any app) and host internet.
+Notes:
 
----
+- `send --amount` must include a ticker, such as `'0.001 BTC'`, `'0.01 ETH'`, or `'100 USDT'`.
+- There is no `--token` flag; the ticker drives asset resolution.
+- `--data` is EVM calldata. Make the human explain and confirm it before signing.
+- `swap execute` has no dry-run. Brief the human first and use `swap status --swap-id <id> --provider <provider>` to monitor or recover.
 
-## Intent map (informal request → command)
+## Intent Map
 
-| User says | Command |
+| User says | Command path |
 | --- | --- |
-| "show my wallet", "what do I have", no task | `session view` (run immediately, then ask) |
-| "find/scan/import my accounts", "set up Ethereum" | `account discover <network>` |
-| "my address", "where do I deposit" | `receive <account>` (USB device) / `receive <account> --no-verify` (no device, unattested) |
-| "balance", "how much do I have" | `balances <account>` |
+| "check my wallet balance", "what do I have", "holdings" | `wallet_cli_workflow.py balance-all` |
+| "show saved accounts", "labels" | `session view` |
+| "find/scan/import my accounts", "wallet device" | `account discover <network>` |
+| "my address", "where do I deposit" | `receive <account>` or `receive <account> --no-verify` |
+| "balance for ethereum-1" | `balances ethereum-1` |
 | "history", "what did I send" | `operations <account>` |
-| "send/transfer/pay X to Y" | `send <account> --to <addr> --amount '<n> <ticker>' --dry-run` first, then live |
-| "swap/convert/trade A to B" | `swap quote …` → `swap execute …` → `swap status …` |
-| "is this Ledger genuine" | `genuine-check` (device on dashboard) |
-| "what's this token / resolve token" | `assets token <network> <addr>` or `assets token-by-id <id>` |
+| "send/transfer/pay X to Y" | dry-run `send`, summarize, ask approval, then live `send` |
+| "swap/convert/trade A to B" | `swap quote`, then `swap execute`, then `swap status` |
+| "is this Ledger genuine" | `genuine-check` |
+| "what is this token" | `assets token <network> <addr>` or `assets token-by-id <id>` |
 | "start over / clear session" | `session reset` |
-
-## Examples
-
-```bash
-wallet-cli session view --output json
-wallet-cli balances ethereum-1 --output json
-wallet-cli operations ethereum-1 --limit 20 --output json
-wallet-cli assets token ethereum 0xdAC17F958D2ee523a2206206994597C13D831ec7 --output json
-# Dry-run FIRST, verify the echo shows recipient/amount/fee and no broadcast:
-wallet-cli send ethereum-1 --to 0xRECIPIENT --amount '0.01 ETH' --dry-run --output json
-# Only after human approval, identical without --dry-run (needs USB device):
-wallet-cli send ethereum-1 --to 0xRECIPIENT --amount '0.01 ETH' --output json
-```
-
-Harness equivalents:
-
-```bash
-python3 ../../scripts/wallet_cli_harness.py -- session view
-python3 ../../scripts/wallet_cli_harness.py -- balances ethereum-1
-python3 ../../scripts/wallet_cli_harness.py -- operations ethereum-1 --limit 20
-python3 ../../scripts/wallet_cli_harness.py -- send ethereum-1 --to 0xRECIPIENT --amount '0.01 ETH' --dry-run
-python3 ../../scripts/wallet_cli_harness.py -- send ethereum-1 --to 0xRECIPIENT --amount '0.01 ETH'
-```

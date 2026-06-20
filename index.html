@@ -272,11 +272,11 @@
           <h1 id="title">Wallet CLI Harness</h1>
           <p class="lead">
             A small JSON harness for Codex agents that run <code>@ledgerhq/wallet-cli</code>:
-            strict flag checks, final-object result parsing, and the same wallet-cli command
-            surface for personal hardware-wallet operations.
+            strict flag checks, final-object result parsing, wallet-cli-only routing, and a
+            <code>balance-all</code> workflow for "check my wallet" requests.
           </p>
           <div class="actions">
-            <a class="button" href="https://github.com/pavelevich/wallet-cli-harness">View on GitHub</a>
+            <a class="button" href="https://github.com/Pavelevich/wallet-cli-harness">View on GitHub</a>
             <a class="button secondary" href="./skills/wallet-cli-harness/SKILL.md">Read the skill</a>
             <a class="button secondary" href="./docs/decision-tree.md">Decision tree</a>
           </div>
@@ -296,8 +296,8 @@
           <p>Reads the final JSON object from stdout and keeps the process exit code as metadata.</p>
         </article>
         <article class="feature">
-          <h2>Command parity</h2>
-          <p>Passes wallet-cli commands through instead of substituting another wallet flow.</p>
+          <h2>Wallet-cli only</h2>
+          <p>Routes wallet requests through the official command surface instead of substituting another wallet stack.</p>
         </article>
       </section>
 
@@ -309,7 +309,7 @@
           </tr>
           <tr>
             <th scope="row">Balances and history</th>
-            <td><code>balances &lt;label&gt;</code>, <code>operations &lt;label&gt; --limit 20</code></td>
+            <td><code>balance-all</code>, <code>balances &lt;label&gt;</code>, <code>operations &lt;label&gt; --limit 20</code></td>
           </tr>
           <tr>
             <th scope="row">Receive and send</th>

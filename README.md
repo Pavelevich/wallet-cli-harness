@@ -7,14 +7,15 @@ This repository contains a local Codex plugin and a small Python harness that he
 - validates command flags before launch;
 - appends `--output json` when appropriate;
 - parses the final JSON object from stdout instead of trusting the process exit code;
-- preserves the wallet-cli command surface instead of substituting another wallet tool.
+- preserves the wallet-cli command surface instead of substituting another wallet stack.
+- provides a `balance-all` workflow for "check my wallet balance" style requests.
 
 ## Capabilities
 
 | Capability | What it can run |
 | --- | --- |
 | Session labels | `session view`, `session reset` |
-| Balances | `balances <label>` |
+| Balances | `balance-all`, `balances <label>` |
 | History | `operations <label> --limit 20` |
 | Receive | `receive <label>`, `receive <label> --no-verify` |
 | Send | `send <label> --to <addr> --amount '<n> TICKER'` |
@@ -35,6 +36,7 @@ This is an independent local plugin. It is not affiliated with, endorsed by, or 
 - `.codex-plugin/plugin.json` - Codex plugin manifest.
 - `skills/wallet-cli-harness/SKILL.md` - Codex operating instructions for wallet-cli flows.
 - `scripts/wallet_cli_harness.py` - conservative command runner for `wallet-cli`.
+- `scripts/wallet_cli_workflow.py` - wallet-cli-only workflows for common user requests.
 - `assets/` - plugin icon and logo.
 - `index.html` - static landing page for the project.
 
@@ -42,6 +44,7 @@ This is an independent local plugin. It is not affiliated with, endorsed by, or 
 
 ```bash
 python3 scripts/wallet_cli_harness.py -- session view
+python3 scripts/wallet_cli_workflow.py balance-all
 python3 scripts/wallet_cli_harness.py -- balances ethereum-1
 python3 scripts/wallet_cli_harness.py -- send ethereum-1 --to 0xRECIPIENT --amount '0.01 ETH' --dry-run
 ```

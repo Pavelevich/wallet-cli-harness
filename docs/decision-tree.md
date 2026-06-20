@@ -1,21 +1,50 @@
 # Wallet CLI Harness Decision Tree
 
-Use this tree to route user language into `wallet-cli` commands.
+Use this tree to route user language into the official `wallet-cli` command surface.
 
-## 1. Route The Domain
+Allowed command surfaces:
 
-If the user asks about AgenC marketplace tasks, agents, registration, settlement, creator/worker flows, or AgenC wallet sends, leave this plugin and follow the host AgenC rules.
+- `python3 scripts/wallet_cli_workflow.py ...`
+- `python3 scripts/wallet_cli_harness.py -- ...`
+- `wallet-cli ... --help` for raw official help text
 
-Otherwise treat the message as a personal `wallet-cli` request.
+Do not use local secret-store files, operating-system hardware scans, direct blockchain endpoint queries, remembered balances, or unrelated wallet tools for wallet-cli tasks.
 
-## 2. Pick The Wallet Intent
+```mermaid
+flowchart TD
+  A["User request while plugin is active"] --> B{"What is the wallet-cli intent?"}
+  B -->|"what can this do?"| C["Show capability table"]
+  B -->|"balance, holdings, what do I have"| D["wallet_cli_workflow.py balance-all"]
+  B -->|"discover, scan, account, wallet device"| E{"Network present?"}
+  E -->|"no"| F["Ask: bitcoin, ethereum, or solana?"]
+  E -->|"yes"| G["wallet_cli_workflow.py discover --network <network>"]
+  B -->|"labels, saved accounts"| H["wallet_cli_harness.py -- session view"]
+  B -->|"history, operations, activity"| I{"Label present?"}
+  I -->|"no"| J["session view, then ask for label"]
+  I -->|"yes"| K["wallet_cli_harness.py -- operations <label> --limit 20"]
+  B -->|"receive, deposit address"| L{"Label present?"}
+  L -->|"no"| M["session view, then ask for label"]
+  L -->|"yes"| N["wallet_cli_harness.py -- receive <label>"]
+  B -->|"send, transfer, pay"| O{"Label, recipient, amount+ticker present?"}
+  O -->|"no"| P["Ask only for missing inputs"]
+  O -->|"yes"| Q["Dry-run send, summarize, ask approval"]
+  Q --> R["After approval: live send"]
+  B -->|"swap, quote, status"| S["Run wallet-cli swap flow"]
+  B -->|"token metadata"| T["assets token or token-by-id"]
+  B -->|"genuine check"| U["wallet_cli_harness.py -- genuine-check"]
+  B -->|"reset"| V["wallet_cli_harness.py -- session reset"]
+  B -->|"ambiguous"| W["Ask one wallet-cli routing question"]
+```
+
+## Intent Table
 
 | User intent | Required inputs | Action |
 | --- | --- | --- |
 | What can this plugin do? | none | Show capability table, then ask what to run |
-| Find devices, discover accounts, scan wallet | network | `account discover <network>` |
-| Check wallet, balance, holdings | saved labels | `session view`, then `balances <label>` for each label |
-| Transaction history | account label | `operations <label> --limit 20` |
+| Check wallet, balance, holdings | none | `python3 scripts/wallet_cli_workflow.py balance-all` |
+| Find wallet device, discover accounts, scan wallet | network | `python3 scripts/wallet_cli_workflow.py discover --network <network>` |
+| Saved labels | none | `python3 scripts/wallet_cli_harness.py -- session view` |
+| Transaction history | account label | `python3 scripts/wallet_cli_harness.py -- operations <label> --limit 20` |
 | Receive/deposit address | account label, verification preference | `receive <label>` or `receive <label> --no-verify` |
 | Send/transfer/pay | account label, recipient, amount with ticker | dry-run `send`, summarize, ask approval, then live `send` |
 | Swap/convert/trade | from, to, amount, account, provider as needed | `swap quote`, `swap execute`, or `swap status` |
@@ -23,28 +52,10 @@ Otherwise treat the message as a personal `wallet-cli` request.
 | Genuine check | none | `genuine-check` |
 | Reset session | none | `session reset` |
 
-## 3. Ask Only For Missing Inputs
-
-Examples:
-
-- Missing network for discovery: `Which network should I scan: bitcoin, ethereum, or solana?`
-- Missing account label for balance/history/receive: run `session view`, show labels, ask which label.
-- Missing send details: ask only for missing account label, recipient, amount, or ticker.
-
-## 4. Run Through The Harness
-
-Prefer:
-
-```bash
-python3 scripts/wallet_cli_harness.py -- <wallet-cli args>
-```
-
-The harness appends `--output json`, validates flags, and parses the final JSON object.
-
-## 5. Report Results
+## Reporting Rules
 
 - Report concrete values from the final JSON object.
 - Mention how many labels/accounts were checked.
-- For balances, list nonzero balances first, then zeros.
+- For balances, list nonzero balances first, then zero labels.
 - For sends, summarize recipient, amount, and fee before asking for approval.
 - For command errors, report the wallet-cli error and ask whether to retry or adjust inputs.
