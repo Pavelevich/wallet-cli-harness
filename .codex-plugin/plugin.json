@@ -1,6 +1,6 @@
 {
   "name": "ledger-wallet-cli",
-  "version": "0.1.0+codex.20260620152330",
+  "version": "0.1.0+codex.20260620153034",
   "description": "Codex JSON harness for the official @ledgerhq/wallet-cli command contract.",
   "author": {
     "name": "Tetsuo Arena"
@@ -22,6 +22,6 @@
     "websiteURL": "https://pavelevich.github.io/wallet-cli-harness/",
     "composerIcon": "./assets/wallet-cli-harness-logo.png",
     "logo": "./assets/wallet-cli-harness-logo.png",
-    "defaultPrompt": "Show wallet-cli capabilities and ask what to run."
+    "defaultPrompt": "Use the decision tree to route wallet-cli requests."
   }
 }

@@ -22,6 +22,10 @@ This repository contains a local Codex plugin and a small Python harness that he
 | Assets | `assets token`, `assets token-by-id` |
 | Device check | `genuine-check` |
 
+## Decision Tree
+
+The agent routing logic lives in [docs/decision-tree.md](docs/decision-tree.md). The same tree is embedded in the Codex skill so the LLM maps user language to `wallet-cli` commands before it reaches for general host tools.
+
 ## Project Status
 
 This is an independent local plugin. It is not affiliated with, endorsed by, or sponsored by Ledger.

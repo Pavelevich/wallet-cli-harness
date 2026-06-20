@@ -15,7 +15,7 @@ wallet-cli <command> [flags] --output json
 
 Networks: **bitcoin**, **ethereum**, **solana** (mainnet + the testnets the build supports). Tokens are supported on those chains.
 
-> **This is the official release, not a fork.** It does NOT have an `error.code`/`retryable` taxonomy, does NOT have meaningful exit codes, does NOT reject unknown flags, has NO `devices` command, and has NO `--device` selector or BLE transport. Everything below is written to the real 1.0.2 contract — do not assume richer behavior.
+> **This targets the official 1.0.2 release, not a fork.** Use only the commands and flags listed in this skill. Decide success from the final JSON object, not from the process exit code. The harness exists because the published CLI accepts unknown flags silently.
 
 ---
 
@@ -40,13 +40,83 @@ Lead with capability, then handle transport details only when they matter. Trans
 
 ---
 
+## Decision tree
+
+Follow this tree for every user message while the plugin is active. Do not skip directly to general shell tools.
+
+1. **Is the request about AgenC marketplace?**
+   If it mentions AgenC tasks, agents, registration, marketplace settlement, creator/worker flows, or AgenC wallet send, stop using this plugin and follow `~/AGENTS.md`.
+   Otherwise continue as a personal `wallet-cli` request.
+
+2. **Is the user asking what the plugin can do?**
+   Show the capability table from "First response style", then ask what to run.
+
+3. **Is the user asking for devices, wallet devices, connected wallet, discover, scan, import, or accounts?**
+   Route to account discovery. Required parameter: `network`.
+   If network is missing, ask exactly: `Which network should I scan: bitcoin, ethereum, or solana?`
+   If network is present, run:
+   `python3 ../../scripts/wallet_cli_harness.py -- account discover <network>`
+   Report discovered labels and addresses from the final JSON object. If wallet-cli returns a transport error, report that result and ask whether to retry.
+
+4. **Is the user asking for wallet, balance, holdings, funds, total, or "what do I have"?**
+   Run:
+   `python3 ../../scripts/wallet_cli_harness.py -- session view`
+   Then run balances for each saved label:
+   `python3 ../../scripts/wallet_cli_harness.py -- balances <label>`
+   Summarize nonzero balances first, then zero balances. Mention the number of labels checked. Do not use remembered labels or prior balances.
+
+5. **Is the user asking for history, transactions, operations, activity, deposits, or sends?**
+   Required parameter: account label.
+   If label is missing, run `session view`, show available labels, and ask which label to inspect.
+   If label is present, run:
+   `python3 ../../scripts/wallet_cli_harness.py -- operations <label> --limit 20`
+
+6. **Is the user asking for a receive address or deposit address?**
+   Required parameter: account label.
+   If label is missing, run `session view`, show labels, and ask which label.
+   If the user asks for verified receive, run:
+   `python3 ../../scripts/wallet_cli_harness.py -- receive <label>`
+   If the user asks for a quick/software address, run:
+   `python3 ../../scripts/wallet_cli_harness.py -- receive <label> --no-verify`
+
+7. **Is the user asking to send, transfer, pay, withdraw, or move funds?**
+   Required parameters: account label, recipient, amount with ticker.
+   If any are missing, ask for only the missing values.
+   First run dry-run:
+   `python3 ../../scripts/wallet_cli_harness.py -- send <label> --to <recipient> --amount '<amount TICKER>' --dry-run`
+   Summarize recipient, amount, and fee from the final JSON object. Ask for explicit approval before live send.
+   After approval, run the same command without `--dry-run`.
+
+8. **Is the user asking to swap, convert, trade, quote, or check swap status?**
+   For quotes, collect from asset, to asset, amount, and source/destination account or fresh-address flags, then run `swap quote`.
+   For execute, collect provider, from, to, amount, account, to-account, and fee strategy if needed, then run `swap execute`.
+   For status, collect swap id and provider, then run `swap status`.
+
+9. **Is the user asking what a token is?**
+   If they provide a token address plus network, run `assets token <network> <address>`.
+   If they provide a token id, run `assets token-by-id <id>`.
+   Ask for the missing network/address/id only if needed.
+
+10. **Is the user asking for genuine check or authenticity?**
+    Run:
+    `python3 ../../scripts/wallet_cli_harness.py -- genuine-check`
+
+11. **Is the user asking to clear/reset/start over?**
+    Run:
+    `python3 ../../scripts/wallet_cli_harness.py -- session reset`
+
+12. **If the request is ambiguous**
+    Ask one routing question tied to wallet-cli capabilities. Do not provide a generic Mac inventory or host diagnosis.
+
+---
+
 ## Stay inside the plugin
 
 When this plugin is active, keep the work centered on the official `wallet-cli` contract and this harness.
 
 - For wallet tasks, run `../../scripts/wallet_cli_harness.py` instead of relying on remembered terminal output, local notes, OS device inventories, or general shell exploration.
-- For "what can you do", "show my wallet", "balance", "history", "receive", "send", "swap", "token", "genuine", or "device" requests in this context, map the request to wallet-cli capabilities first.
-- If the user asks "list devices" or "connected devices" while working in Wallet CLI Harness, explain the wallet-cli-relevant device capabilities: `account discover`, `receive` verification, live `send`, `swap execute`, and `genuine-check`. Official `wallet-cli` 1.0.2 has no `devices` command. Ask whether they want to run a specific wallet-cli device command.
+- For "what can you do", "show my wallet", "balance", "history", "receive", "send", "swap", "token", "genuine", or "device" requests in this context, map the request through the decision tree first.
+- Treat "devices", "wallet devices", "find my wallet", "discover", "scan", and "accounts" as the account discovery workflow unless the user explicitly asks for a general Mac hardware inventory.
 - Only inspect host hardware inventory when the user explicitly asks for a general Mac hardware inventory outside the wallet-cli flow. Do not drift into Mac inventory during wallet-cli flows.
 - Do not use recalled balances, remembered labels, previous screenshots, or prior thread summaries as authority. Re-run `session view`, then the relevant `balances`/`operations` command.
 - Do not switch to AgenC for personal `wallet-cli` requests. AgenC is only for AgenC marketplace intent.
@@ -62,7 +132,7 @@ I can discover wallet-cli accounts. Which network should I scan: bitcoin, ethere
 For `find my wallet devices` or `list wallet devices`:
 
 ```text
-wallet-cli works by discovering accounts for a selected network rather than listing devices as a separate inventory. I can run account discovery next. Which network should I scan: bitcoin, ethereum, or solana?
+I can run wallet-cli account discovery next. Which network should I scan: bitcoin, ethereum, or solana?
 ```
 
 For `check the balance of my wallet` with no label:
