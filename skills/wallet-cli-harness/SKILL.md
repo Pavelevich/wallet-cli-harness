@@ -47,9 +47,31 @@ When this plugin is active, keep the work centered on the official `wallet-cli` 
 - For wallet tasks, run `../../scripts/wallet_cli_harness.py` instead of relying on remembered terminal output, local notes, OS device inventories, or general shell exploration.
 - For "what can you do", "show my wallet", "balance", "history", "receive", "send", "swap", "token", "genuine", or "device" requests in this context, map the request to wallet-cli capabilities first.
 - If the user asks "list devices" or "connected devices" while working in Wallet CLI Harness, explain the wallet-cli-relevant device capabilities: `account discover`, `receive` verification, live `send`, `swap execute`, and `genuine-check`. Official `wallet-cli` 1.0.2 has no `devices` command. Ask whether they want to run a specific wallet-cli device command.
-- Only inspect macOS USB/Bluetooth/IORegistry/System Profiler when the user explicitly asks for a Mac hardware inventory, such as "list all Mac USB/Bluetooth devices" or "use system_profiler". Do not drift into Mac inventory during wallet-cli flows.
+- Only inspect host hardware inventory when the user explicitly asks for a general Mac hardware inventory outside the wallet-cli flow. Do not drift into Mac inventory during wallet-cli flows.
 - Do not use recalled balances, remembered labels, previous screenshots, or prior thread summaries as authority. Re-run `session view`, then the relevant `balances`/`operations` command.
 - Do not switch to AgenC for personal `wallet-cli` requests. AgenC is only for AgenC marketplace intent.
+
+### Response examples
+
+For `discover accounts` with no network:
+
+```text
+I can discover wallet-cli accounts. Which network should I scan: bitcoin, ethereum, or solana?
+```
+
+For `find my wallet devices` or `list wallet devices`:
+
+```text
+wallet-cli works by discovering accounts for a selected network rather than listing devices as a separate inventory. I can run account discovery next. Which network should I scan: bitcoin, ethereum, or solana?
+```
+
+For `check the balance of my wallet` with no label:
+
+```text
+I’ll read saved wallet-cli labels with session view, then check balances for the saved accounts.
+```
+
+Keep the wording action-oriented: say what wallet-cli operation you can run next, ask for the missing parameter, or report the concrete JSON result from the harness.
 
 ---
 
@@ -80,16 +102,6 @@ For `wallet-cli <command> --help`, call the binary directly or pass `--no-auto-o
 - **IS NOT** the AgenC marketplace. Never use `wallet-cli` for AgenC tasks, registration, or settlement — those go through `agenc-marketplace` over DMK/BLE per the **HOST LEDGER RULE** in `~/AGENTS.md`. The two tools are unrelated; do not cross them in either direction.
 - **IS NOT** for NFTs, encryption/PGP, custom chains, or non-listed networks. If asked, say wallet-cli does not support it rather than inventing a command.
 
-## Host transport note
-
-This host's Ledger **Flex only works over Bluetooth (BLE)**, and the official `wallet-cli` 1.0.2 is **USB-only** (no BLE). This is a transport limitation of the official binary, not a reason to switch a personal wallet-cli request to AgenC.
-
-- **Local/session commands:** `session view/reset`, `balances`, `operations`, `swap quote`, `swap status`, `assets token`/`token-by-id`, `send --dry-run`, `receive --no-verify`.
-- **Device commands:** `account discover`, `receive` (default verify), `send` (live), `swap execute`, `genuine-check`. If the user explicitly wants wallet-cli, run the wallet-cli command after the approval gates below and report the actual wallet-cli result. On this specific host, these commands may time out when the only device path is a BLE-only Flex because official wallet-cli has no BLE transport.
-- **Do not substitute AgenC for wallet-cli.** Use AgenC DMK/BLE only when the user's intent is AgenC marketplace work (tasks, registration, settlement, or AgenC wallet send). A personal wallet-cli send and an AgenC marketplace send are different operations.
-
----
-
 ## Output contract (official 1.0.2) — parse stdout, never the exit code
 
 Always pass `--output json` when you will parse. In JSON mode **stdout is NDJSON**: zero or more intermediate events, then exactly one final object.
@@ -103,6 +115,16 @@ Always pass `--output json` when you will parse. In JSON mode **stdout is NDJSON
 5. `{"ok":false, "error":{"kind": "command-not-found"|"validation", "available":[...]?, ...}}` — **framework (bunli) error**, usually a bad command or a malformed value. Fix the invocation.
 
 Success keys on `status`; errors key on `ok`. Help/version in agent mode come back as `{"ok":true,"data":{"type":"help"|"version", ...}}`. Amounts in JSON are formatted strings with ticker (e.g. `"0.5 ETH"`), not atomic integers.
+
+---
+
+## Transport troubleshooting
+
+Keep transport discussion reactive. Do not lead with it.
+
+If a wallet-cli device command returns a timeout or transport error on this host, say what wallet-cli returned, then add: "The official wallet-cli 1.0.2 has no BLE transport, so this host may need a wallet-cli-reachable Ledger for that device command." Do not switch tools unless the user changes intent away from wallet-cli.
+
+Use AgenC DMK/BLE only when the user's intent is AgenC marketplace work. A personal wallet-cli send and an AgenC marketplace send are different operations.
 
 ---
 
