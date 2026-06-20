@@ -1,0 +1,25 @@
+{
+  "name": "ledger-wallet-cli",
+  "version": "0.1.0+codex.20260620143738",
+  "description": "Codex safety harness for the official @ledgerhq/wallet-cli command contract.",
+  "author": {
+    "name": "Tetsuo Arena"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Wallet CLI Harness",
+    "shortDescription": "Run hardware-wallet CLI flows with Codex safety rails.",
+    "longDescription": "Adds Codex instructions and a hardened local harness for the official @ledgerhq/wallet-cli 1.0.2 contract: JSON output parsing, strict flag handling, dry-run-first send rails, and a clear separation from AgenC DMK/BLE marketplace flows. This is an independent local plugin and is not affiliated with, endorsed by, or sponsored by Ledger.",
+    "developerName": "Tetsuo Arena",
+    "category": "Productivity",
+    "capabilities": [
+      "wallet-cli command mapping",
+      "NDJSON result parsing",
+      "Hardware-wallet send safety rails"
+    ],
+    "brandColor": "#0A0A0A",
+    "composerIcon": "./assets/icon.png",
+    "logo": "./assets/logo.png",
+    "defaultPrompt": "Help me use wallet-cli safely."
+  }
+}

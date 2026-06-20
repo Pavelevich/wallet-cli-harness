@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wallet CLI Harness</title>
+    <meta
+      name="description"
+      content="Independent Codex safety rails for the official @ledgerhq/wallet-cli command contract."
+    />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #050505;
+        --panel: #101114;
+        --text: #f8fafc;
+        --muted: #a1a1aa;
+        --line: #2a2d33;
+        --accent: #ffffff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      main {
+        width: min(1120px, calc(100% - 40px));
+        margin: 0 auto;
+        padding: 56px 0;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 360px;
+        gap: 56px;
+        align-items: center;
+        min-height: 78vh;
+      }
+
+      .eyebrow {
+        margin: 0 0 18px;
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        max-width: 760px;
+        font-size: clamp(44px, 7vw, 92px);
+        line-height: 0.95;
+        letter-spacing: 0;
+      }
+
+      .lead {
+        max-width: 680px;
+        margin: 28px 0 0;
+        color: var(--muted);
+        font-size: 21px;
+        line-height: 1.55;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-top: 34px;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 46px;
+        padding: 0 18px;
+        border: 1px solid var(--accent);
+        border-radius: 8px;
+        color: #050505;
+        background: var(--accent);
+        font-weight: 750;
+        text-decoration: none;
+      }
+
+      .button.secondary {
+        color: var(--text);
+        background: transparent;
+        border-color: var(--line);
+      }
+
+      .logo-wrap {
+        display: grid;
+        place-items: center;
+      }
+
+      .logo {
+        width: min(100%, 360px);
+        aspect-ratio: 1;
+        object-fit: contain;
+      }
+
+      .features {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 20px;
+      }
+
+      .feature {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 22px;
+        background: var(--panel);
+      }
+
+      .feature h2 {
+        margin: 0 0 12px;
+        font-size: 19px;
+        letter-spacing: 0;
+      }
+
+      .feature p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .note {
+        margin-top: 28px;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      code {
+        color: var(--text);
+        background: #181a20;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 2px 6px;
+      }
+
+      @media (max-width: 820px) {
+        main {
+          width: min(100% - 28px, 720px);
+          padding: 34px 0;
+        }
+
+        .hero {
+          grid-template-columns: 1fr;
+          gap: 32px;
+          min-height: auto;
+        }
+
+        .logo-wrap {
+          order: -1;
+          justify-content: start;
+        }
+
+        .logo {
+          width: 180px;
+        }
+
+        .lead {
+          font-size: 18px;
+        }
+
+        .features {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="hero" aria-labelledby="title">
+        <div>
+          <p class="eyebrow">Codex plugin</p>
+          <h1 id="title">Wallet CLI Harness</h1>
+          <p class="lead">
+            A small safety layer for Codex agents that run <code>@ledgerhq/wallet-cli</code>:
+            strict flag checks, JSON result parsing, and conservative rails around irreversible
+            hardware-wallet actions.
+          </p>
+          <div class="actions">
+            <a class="button" href="https://github.com/pavelevich/wallet-cli-harness">View on GitHub</a>
+            <a class="button secondary" href="./skills/wallet-cli-harness/SKILL.md">Read the skill</a>
+          </div>
+        </div>
+        <div class="logo-wrap">
+          <img class="logo" src="./assets/logo.png" alt="Wallet CLI Harness logo" />
+        </div>
+      </section>
+
+      <section class="features" aria-label="Highlights">
+        <article class="feature">
+          <h2>Strict flags</h2>
+          <p>Rejects unknown or unsupported flags before the official CLI can silently ignore them.</p>
+        </article>
+        <article class="feature">
+          <h2>JSON outcome</h2>
+          <p>Reads the final JSON object from stdout and keeps the process exit code as metadata.</p>
+        </article>
+        <article class="feature">
+          <h2>Send rails</h2>
+          <p>Blocks live sends and device-touching commands by default unless an explicit override is used.</p>
+        </article>
+      </section>
+
+      <p class="note">
+        Independent project. Not affiliated with, endorsed by, or sponsored by Ledger.
+      </p>
+    </main>
+  </body>
+</html>
