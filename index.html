@@ -172,6 +172,33 @@
         border-bottom: 0;
       }
 
+      .code-location {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 28px;
+      }
+
+      .location-item {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 18px;
+        background: var(--panel);
+      }
+
+      .location-item h2 {
+        margin: 0 0 10px;
+        font-size: 16px;
+        letter-spacing: 0;
+      }
+
+      .location-item p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.55;
+        overflow-wrap: anywhere;
+      }
+
       .note {
         margin-top: 28px;
         color: var(--muted);
@@ -213,6 +240,10 @@
         }
 
         .features {
+          grid-template-columns: 1fr;
+        }
+
+        .code-location {
           grid-template-columns: 1fr;
         }
 
@@ -293,6 +324,17 @@
           </tr>
         </tbody>
       </table>
+
+      <section class="code-location" aria-label="Code location">
+        <article class="location-item">
+          <h2>GitHub repo</h2>
+          <p><a href="https://github.com/Pavelevich/wallet-cli-harness">github.com/Pavelevich/wallet-cli-harness</a></p>
+        </article>
+        <article class="location-item">
+          <h2>Local code directory</h2>
+          <p><code>/Users/tetsuoarena/plugins/ledger-wallet-cli</code></p>
+        </article>
+      </section>
 
       <p class="note">
         Independent project. Not affiliated with, endorsed by, or sponsored by Ledger.
