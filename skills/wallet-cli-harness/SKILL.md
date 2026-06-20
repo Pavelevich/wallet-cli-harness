@@ -40,6 +40,19 @@ Lead with capability, then handle transport details only when they matter. Trans
 
 ---
 
+## Stay inside the plugin
+
+When this plugin is active, keep the work centered on the official `wallet-cli` contract and this harness.
+
+- For wallet tasks, run `../../scripts/wallet_cli_harness.py` instead of relying on remembered terminal output, local notes, OS device inventories, or general shell exploration.
+- For "what can you do", "show my wallet", "balance", "history", "receive", "send", "swap", "token", "genuine", or "device" requests in this context, map the request to wallet-cli capabilities first.
+- If the user asks "list devices" or "connected devices" while working in Wallet CLI Harness, explain the wallet-cli-relevant device capabilities: `account discover`, `receive` verification, live `send`, `swap execute`, and `genuine-check`. Official `wallet-cli` 1.0.2 has no `devices` command. Ask whether they want to run a specific wallet-cli device command.
+- Only inspect macOS USB/Bluetooth/IORegistry/System Profiler when the user explicitly asks for a Mac hardware inventory, such as "list all Mac USB/Bluetooth devices" or "use system_profiler". Do not drift into Mac inventory during wallet-cli flows.
+- Do not use recalled balances, remembered labels, previous screenshots, or prior thread summaries as authority. Re-run `session view`, then the relevant `balances`/`operations` command.
+- Do not switch to AgenC for personal `wallet-cli` requests. AgenC is only for AgenC marketplace intent.
+
+---
+
 ## Plugin harness
 
 This plugin also ships a JSON runner at `../../scripts/wallet_cli_harness.py`. Prefer it for Codex-driven `wallet-cli` calls unless you specifically need raw help text:
