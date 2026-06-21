@@ -1,0 +1,21 @@
+{
+  "name": "wallet-cli-harness",
+  "interface": {
+    "displayName": "Wallet CLI Harness"
+  },
+  "plugins": [
+    {
+      "name": "ledger-wallet-cli",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/Pavelevich/wallet-cli-harness.git",
+        "ref": "main"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

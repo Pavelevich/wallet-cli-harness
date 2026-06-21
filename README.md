@@ -27,6 +27,17 @@ This repository contains a local Codex plugin and a small Python harness that he
 
 The agent routing logic lives in [docs/decision-tree.md](docs/decision-tree.md). The same tree is embedded in the Codex skill so the LLM maps user language to `wallet-cli` commands before it reaches for general host tools.
 
+## Install From GitHub
+
+Add the public marketplace and install the plugin:
+
+```bash
+codex plugin marketplace add Pavelevich/wallet-cli-harness --ref main
+codex plugin add ledger-wallet-cli@wallet-cli-harness
+```
+
+The marketplace entry lives at `.agents/plugins/marketplace.json` and points Codex at this repo as the plugin source.
+
 ## Project Status
 
 This is an independent local plugin. It is not affiliated with, endorsed by, or sponsored by Ledger.
